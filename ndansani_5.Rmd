@@ -1,0 +1,110 @@
+---
+title: "ndansani_5"
+author: "Nadia Dansani"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+#1
+x1 = total production rates for project 1
+x2 = total production rates for project 2
+x3 = total production rates for project 3
+
+Objective Function - Max z = P - 6C - 3D
+where: 
+  
+  Z = Non preemptive Goal Programming of various goals in long-term profit 
+  P = total (discounted) profit over the life of the new products
+  C = change (in either direction) in the current level of employment
+  D = decrease (if any) in next year's earnings from the current year's level. 
+ 
+constraints & definitions:
+
+20x1 + 15x2 + 35x3 = P (profit objective function in millions $)
+6x1 + 4x2 + 5x3 = 50 (employment in 100s of employees)
+8x1 + 7 x2 + 5x3 >= 75 (earnings next year in millions $) 
+
+penalties:
+
+C = -6 -6
+D = -3L
+LP constraints:
+
+y1 = 6x1 + 4x2 + 5x3 - 50
+y2 = 8x1 + 7x2 + 5x3 - 75
+
+Since y1 = y1+ - y1-
+      y2 = y2+ - y2-
+
+Sub new definitions for y1 and y2 back into the original constraints.
+y1+ - y1- = 6x1 + 4x2 + 5x3 - 50
+y2+ - y2- = 8x1 + 7x2 + 5x3 - 75
+
+convert the constraints and P into LP format.
+
+6x1 + 4x2 + 5x3 - (y1+ - y1-) = 50
+8x1 + 7x2 + 5x3 - (y2+ - y2-) = 75
+20x1 + 15x2 + 35x3 = P
+xj >= 0, yk >= o, yk >= 0
+
+#2
+Convert the final objective function in terms of x1, x2, x3, y1+, y1- , y2+ and y2- and the penalties in management's goals.
+
+Maximize Z = P - 6C - 3D
+
+Max z = 20x1 + 15x2 + 25x3 - 6y1+ - 6y1- - 3y2-
+
+All decision variables in the objective function
+Max z = 20x1 + 15x2 + 25x3 - 6y1+ - 6y1- + 0y2+ - 3y2-
+#3
+Objective function - Max z = 20x1 + 15x2 + 25x3 - 6y1+ + -6y1- + -3y2-
+ST:
+6x1 + 4x2 + 5x3 - (y1+ - y1-) = 50
+8x1 + 7x2 + 5x3 - (y2+ - y2-) = 75
+  where, xj >= 0, yk >= o, yk >= 0
+
+Max z = 20x1 + 15x2 + 25x3 + -6y1+ - 6y1- + 0y2+ + -3y2-
+ST
+6x1 + 4x2 + 5x3 + -1y1+ + 1y1- + 0y2+ + 0y2- = 50
+8x1 + 7x2 + 5x3 + 0y1+ + 0y1- + -1y2+ + 1y2- = 75
+  where, xj >= 0, yk >= o, yk >= 0
+  
+  There are seven decision.
+
+```{r goal_programming}
+library(lpSolveAPI)
+lprec <- make.lp (2,7)
+set.objfn(lprec, c(20,15,25,-6,-6,0,-3))
+lp.control(lprec,sense='max')
+add.constraint(lprec, c(6,4,5,-1,1,0,0),"=",50)
+add.constraint(lprec, c(8,7,5,0,0,-1,0),"=",75)
+set.bounds(lprec, lower = c(0,0,0,0,0,0,0), columns = c(1,2,3,4,5,6,7))
+ColNames <- c("rate_of_project1", "rate_of_project2", "rate_of_project3","penalty_positive_change_level_of_employment", "penalty_negative_change_level_of_employment", "penalty_positive_change_level_of_next_year_earnings", "penalty_negative_change_level_of_next_year_earnings", "non-negativity_constraint", "non-negativity_constraint", "non-negativity_constraint", "non-negativity_constraint", "non-negativity_constraint", "non-negativity_constraint", "non-negativity_constraint", "non-negativity_constraint", "non-negativity_constraint")
+rownames <- c("current_level_employment","next_year_earnings")
+lprec
+write.lp(lprec, filename = "Emax_Corporation_goal_programming_problem", type = "lp")
+solve(lprec)
+get.objective (lprec) 
+get.variables (lprec)
+```
+The non-preemptive goal programming of various goals in long-term profit is 225 million. This was solved using the shortcut method. 
+250 employees should be added to keep the same amount of profit margins in the next year. THe employment target is exceeded by 25% based off of the 2500 employees.  Profit = 20x1 + 15x2 + 25x3 = 20(0) + 15(0) + 25(15) = 375 million dollars excluding training and acquisition costs associated with bringing on new employees. 
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
